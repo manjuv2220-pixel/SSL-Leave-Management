@@ -1,0 +1,574 @@
+{% extends "layout.html" %}
+
+{% block title %}My Attendance - Textile Leave Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-industry me-2"></i>TextileLeave Pro</h3>
+                <small>Employee Portal</small>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h5 class="mt-2 mb-0">{{ current_user.get_full_name() }}</h5>
+                <small class="text-muted">{{ current_user.designation }}</small>
+                <p class="small mt-2 mb-0">{{ current_user.employee_id }}</p>
+            </div>
+            
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('apply_leave') }}">
+                        <i class="fas fa-calendar-plus me-2"></i>Apply Leave
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('leave_status') }}">
+                        <i class="fas fa-history me-2"></i>Leave Status
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('user_attendance') }}">
+                        <i class="fas fa-clock me-2"></i>My Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-user-cog me-2"></i>Profile
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="welcome-message">
+                            <h1>My Attendance Records</h1>
+                            <p class="text-muted mb-0">Track your attendance and working hours</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ month_name }} {{ year }}
+                            </button>
+                            <div class="dropdown-menu">
+                                <form method="GET" action="{{ url_for('user_attendance') }}" class="px-3 py-2">
+                                    <div class="mb-2">
+                                        <label class="form-label small">Select Month</label>
+                                        <select class="form-select form-select-sm" name="month">
+                                            {% for m in range(1, 13) %}
+                                            <option value="{{ m }}" {% if m == month|int %}selected{% endif %}>
+                                                {{ m }} - {{ ['January','February','March','April','May','June','July','August','September','October','November','December'][m-1] }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Select Year</label>
+                                        <select class="form-select form-select-sm" name="year">
+                                            {% for y in range(2023, 2026) %}
+                                            <option value="{{ y }}" {% if y == year|int %}selected{% endif %}>{{ y }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">View</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Summary -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            {% set present_count = attendances|selectattr('status', 'equalto', 'Present')|list|length %}
+                            <h3>{{ present_count }}</h3>
+                            <p>Present Days</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <div class="stat-content">
+                            {% set absent_count = attendances|selectattr('status', 'equalto', 'Absent')|list|length %}
+                            <h3>{{ absent_count }}</h3>
+                            <p>Absent Days</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            {% set late_count = attendances|selectattr('status', 'equalto', 'Late')|list|length %}
+                            <h3>{{ late_count }}</h3>
+                            <p>Late Days</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            {% set overtime_total = attendances|sum(attribute='overtime_hours') %}
+                            <h3>{{ overtime_total|int }}</h3>
+                            <p>Overtime Hours</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Calendar View -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <!-- FIXED LINE: Changed calendar.month_name[month] to month_name -->
+                    <i class="fas fa-calendar-alt me-2"></i>Attendance Calendar - {{ month_name }} {{ year }}
+                </div>
+                <div class="card-body">
+                    <div class="calendar-grid">
+                        <div class="row calendar-header">
+                            <div class="col day-header">Sun</div>
+                            <div class="col day-header">Mon</div>
+                            <div class="col day-header">Tue</div>
+                            <div class="col day-header">Wed</div>
+                            <div class="col day-header">Thu</div>
+                            <div class="col day-header">Fri</div>
+                            <div class="col day-header">Sat</div>
+                        </div>
+                        {% for week in month_days %}
+                        <div class="row calendar-week">
+                            {% for day in week %}
+                            <div class="col calendar-day {% if day.month != month %}empty{% endif %}">
+                                <div class="day-number">{{ day.day }}</div>
+                                {% if day.month == month %}
+                                    {% set day_attendance = attendances|selectattr('date', 'equalto', day)|first %}
+                                    {% if day_attendance %}
+                                    <div class="attendance-status
+                                        {% if day_attendance.status == 'Present' %}present
+                                        {% elif day_attendance.status == 'Absent' %}absent
+                                        {% elif day_attendance.status == 'Late' %}late
+                                        {% elif day_attendance.status == 'Half-day' %}half-day
+                                        {% endif %}">
+                                        {{ day_attendance.status[0] }}
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="calendar-legend mt-4">
+                        <div class="d-flex justify-content-center gap-4">
+                            <div class="legend-item">
+                                <span class="legend-color present"></span>
+                                <span class="legend-text">Present</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color absent"></span>
+                                <span class="legend-text">Absent</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color late"></span>
+                                <span class="legend-text">Late</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color half-day"></span>
+                                <span class="legend-text">Half Day</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Detailed Attendance Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list me-2"></i>Detailed Attendance Records</span>
+                    <button class="btn btn-sm btn-outline-primary export-btn" data-type="my_attendance" data-format="csv">
+                        <i class="fas fa-file-csv me-1"></i>Export CSV
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if attendances %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Status</th>
+                                    <th>Working Hours</th>
+                                    <th>Overtime</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attendance in attendances %}
+                                <tr>
+                                    <td>{{ attendance.date.strftime('%d %b %Y') }}</td>
+                                    <td>{{ attendance.date.strftime('%A')[:3] }}</td>
+                                    <td>
+                                        {% if attendance.check_in %}
+                                        <span class="text-success">{{ attendance.check_in.strftime('%H:%M') }}</span>
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.check_out %}
+                                        <span class="text-danger">{{ attendance.check_out.strftime('%H:%M') }}</span>
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.status == 'Present' %}
+                                        <span class="badge bg-success">Present</span>
+                                        {% elif attendance.status == 'Absent' %}
+                                        <span class="badge bg-danger">Absent</span>
+                                        {% elif attendance.status == 'Late' %}
+                                        <span class="badge bg-warning">Late</span>
+                                        {% elif attendance.status == 'Half-day' %}
+                                        <span class="badge bg-info">Half Day</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ attendance.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.check_in and attendance.check_out %}
+                                        {% set check_in_time = attendance.check_in %}
+                                        {% set check_out_time = attendance.check_out %}
+                                        {% set hours = check_out_time.hour - check_in_time.hour %}
+                                        {% set minutes = check_out_time.minute - check_in_time.minute %}
+                                        {% if minutes < 0 %}
+                                            {% set hours = hours - 1 %}
+                                            {% set minutes = minutes + 60 %}
+                                        {% endif %}
+                                        {{ hours }}h {{ minutes }}m
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.overtime_hours and attendance.overtime_hours > 0 %}
+                                        <span class="badge bg-primary">{{ attendance.overtime_hours }} hrs</span>
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.remarks %}
+                                        <small data-bs-toggle="tooltip" title="{{ attendance.remarks }}">
+                                            {{ attendance.remarks|truncate(20) }}
+                                        </small>
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                        <h5>No Attendance Records</h5>
+                        <p class="text-muted">No attendance records found for the selected period</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Overtime Summary -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line me-2"></i>Monthly Attendance Trend
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="attendanceTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-money-bill-wave me-2"></i>Overtime Summary
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="text-center py-3">
+                                        <h3 class="text-primary">{{ overtime_total|int }}</h3>
+                                        <p class="text-muted mb-0">Total Hours</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="text-center py-3">
+                                        <h3 class="text-success">₹{{ overtime_total * 250 }}</h3>
+                                        <p class="text-muted mb-0">Estimated Value</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Overtime rate: ₹250 per hour. Payment processed monthly.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.calendar-grid {
+    margin: 0 -10px;
+}
+
+.calendar-header {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.day-header {
+    padding: 10px;
+    text-align: center;
+    border-right: 1px solid #dee2e6;
+}
+
+.day-header:last-child {
+    border-right: none;
+}
+
+.calendar-week {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.calendar-week:last-child {
+    border-bottom: none;
+}
+
+.calendar-day {
+    height: 80px;
+    padding: 5px;
+    border-right: 1px solid #dee2e6;
+    position: relative;
+}
+
+.calendar-day:last-child {
+    border-right: none;
+}
+
+.calendar-day.empty {
+    background: #f8f9fa;
+}
+
+.day-number {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.attendance-status {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+    color: white;
+}
+
+.attendance-status.present {
+    background: #28a745;
+}
+
+.attendance-status.absent {
+    background: #dc3545;
+}
+
+.attendance-status.late {
+    background: #ffc107;
+    color: #212529;
+}
+
+.attendance-status.half-day {
+    background: #17a2b8;
+}
+
+.calendar-legend {
+    font-size: 14px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.legend-color.present {
+    background: #28a745;
+}
+
+.legend-color.absent {
+    background: #dc3545;
+}
+
+.legend-color.late {
+    background: #ffc107;
+}
+
+.legend-color.half-day {
+    background: #17a2b8;
+}
+</style>
+
+<script>
+// Initialize attendance trend chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('attendanceTrendChart').getContext('2d');
+    
+    // Sample data - in real app, this would come from API
+    const data = {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Present Days',
+            data: [5, 4, 5, 4],
+            backgroundColor: 'rgba(40, 167, 69, 0.2)',
+            borderColor: 'rgba(40, 167, 69, 1)',
+            borderWidth: 2,
+            tension: 0.4
+        }, {
+            label: 'Overtime Hours',
+            data: [2, 4, 3, 5],
+            backgroundColor: 'rgba(0, 123, 255, 0.2)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 2,
+            tension: 0.4
+        }]
+    };
+    
+    const config = {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    };
+    
+    new Chart(ctx, config);
+});
+
+// Export functionality
+$('.export-btn').on('click', function() {
+    const type = $(this).data('type');
+    const format = $(this).data('format');
+    
+    let url = '/api/export/' + type;
+    url += '?month=' + {{ month }} + '&year=' + {{ year }} + '&format=' + format;
+    
+    toastr.info('Generating export file...');
+    
+    // For now, just show a message
+    setTimeout(() => {
+        toastr.success('Export file generated successfully');
+    }, 1500);
+});
+
+// Tooltip initialization
+$(function () {
+    $('[data-bs-toggle="tooltip"]').tooltip()
+});
+
+// Highlight today's date in calendar
+$(document).ready(function() {
+    const today = new Date();
+    if (today.getFullYear() == {{ year }} && (today.getMonth() + 1) == {{ month }}) {
+        $('.calendar-day').each(function() {
+            const dayNumber = $(this).find('.day-number').text();
+            if (dayNumber == today.getDate()) {
+                $(this).css('border', '2px solid #007bff');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

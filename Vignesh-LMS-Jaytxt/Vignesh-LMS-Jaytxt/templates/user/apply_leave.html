@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply Leave - Textile Leave Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Select2 for better dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --info-color: #7209b7;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            margin-bottom: 0;
+            box-shadow: var(--card-shadow);
+        }
+
+        .leave-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+
+        .leave-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            color: white;
+            transition: var(--transition);
+            display: block;
+            margin: 30px auto 0;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+
+        /* Coworker Application Styles */
+        .coworker-option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .coworker-option:hover, .coworker-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        .coworker-option.selected {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.1), rgba(67, 97, 238, 0.05));
+        }
+
+        .coworker-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .coworker-info {
+            flex: 1;
+        }
+
+        .coworker-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .badge-coworker {
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-new-worker {
+            background: linear-gradient(135deg, #f72585, #7209b7);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        /* Alert Styles */
+        .alert-coworker {
+            background: linear-gradient(135deg, #ffd166, #ff9e00);
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        /* Select2 Customization */
+        .select2-container--default .select2-selection--single {
+            border: 2px solid #e0e0e0 !important;
+            border-radius: 10px !important;
+            height: 46px !important;
+            padding: 6px 15px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px !important;
+            right: 10px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 32px !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--primary-color) !important;
+        }
+
+        .days-counter {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-align: center;
+            padding: 15px;
+            background: rgba(67, 97, 238, 0.1);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .back-btn {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Ticket Number Styles */
+        .ticket-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px dashed #dee2e6;
+        }
+
+        .ticket-badge {
+            background: linear-gradient(135deg, #7209b7, #3a0ca3);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* New Worker Styles */
+        .new-worker-form {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px dashed #4361ee;
+        }
+
+        .new-worker-header {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .new-worker-btn {
+            background: linear-gradient(135deg, #f72585, #7209b7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .new-worker-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        /* Switch between forms */
+        .form-switch-buttons {
+            display: flex;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .form-switch-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f8f9fa;
+            border: none;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .form-switch-btn.active {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            color: white;
+        }
+
+        .form-switch-btn:not(.active):hover {
+            background: #e9ecef;
+        }
+
+        /* Leave Type Cards */
+        .leave-type-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header-section {
+                padding: 20px;
+            }
+
+            .leave-card {
+                padding: 20px;
+            }
+
+            .coworker-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .coworker-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-switch-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Back Button -->
+        <a href="{{ url_for('user_dashboard') }}" class="back-btn">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-calendar-plus me-3"></i>Apply for Leave</h1>
+                    <p class="lead mb-0">Submit your leave application or apply for coworkers</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-inline-block bg-white text-dark p-3 rounded-3">
+                        <small class="text-muted d-block">Employee ID</small>
+                        <strong>{{ current_user.employee_id }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-notification alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Apply For Toggle -->
+        <div class="leave-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4><i class="fas fa-user-friends me-2"></i>Who is this leave for?</h4>
+                    <p class="text-muted mb-0">Choose to apply leave for yourself or for a coworker</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <label class="d-flex align-items-center justify-content-end">
+                        <span class="me-3">Myself</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="applyForCoworker">
+                            <span class="toggle-slider"></span>
+                        </div>
+                        <span class="ms-3">Coworker</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <!-- Left Column: Leave Application Form -->
+            <div class="col-lg-8">
+                <div class="leave-card">
+                    <h3 class="mb-4"><i class="fas fa-edit me-2"></i>Leave Application Form</h3>
+
+                    <form method="POST" id="leaveForm" action="{{ url_for('apply_leave') }}">
+                        <!-- Hidden field for coworker ID -->
+                        <input type="hidden" name="coworker_id" id="coworker_id" value="">
+                        <!-- Hidden field to indicate new worker -->
+                        <input type="hidden" name="is_new_worker" id="is_new_worker" value="0">
+
+                        <!-- Coworker Selection Section -->
+                        <div id="coworkerSection" style="display: none;">
+                            <div class="alert alert-coworker mb-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-info-circle fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-1">Applying for Coworker</h5>
+                                        <p class="mb-0">You are applying leave on behalf of a coworker</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Switch Buttons -->
+                            <div class="form-switch-buttons">
+                                <button type="button" class="form-switch-btn active" id="switchExistingBtn" onclick="showExistingCoworkerForm()">
+                                    <i class="fas fa-users me-2"></i>Existing Worker
+                                </button>
+                                <button type="button" class="form-switch-btn" id="switchNewBtn" onclick="showNewWorkerForm()">
+                                    <i class="fas fa-user-plus me-2"></i>New Worker
+                                </button>
+                            </div>
+
+                            <!-- Existing Coworker Form -->
+                            <div id="existingCoworkerForm">
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold mb-3">
+                                        <i class="fas fa-search me-2"></i>Search and Select Coworker
+                                    </label>
+                                    <select class="form-select" id="coworkerSelect" style="width: 100%;">
+                                        <option value="">-- Select a coworker --</option>
+                                        {% if coworkers %}
+                                            {% for coworker in coworkers %}
+                                                <option value="{{ coworker.id }}"
+                                                        data-name="{{ coworker.get_full_name() }}"
+                                                        data-employee-id="{{ coworker.employee_id }}"
+                                                        data-department="{{ coworker.department }}"
+                                                        data-designation="{{ coworker.designation }}"
+                                                        data-phone="{{ coworker.phone }}">
+                                                    {{ coworker.employee_id }} - {{ coworker.get_full_name() }} ({{ coworker.department }})
+                                                </option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                </div>
+
+                                <!-- Selected Coworker Display -->
+                                <div id="selectedCoworker" class="selected-coworker" style="display: none;">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="coworker-avatar">
+                                            <i class="fas fa-user-tie"></i>
+                                        </div>
+                                        <div class="coworker-info">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h4 class="mb-1" id="selectedCoworkerName">No coworker selected</h4>
+                                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                                        <span class="badge-coworker" id="selectedCoworkerId">ID: N/A</span>
+                                                        <span class="badge-coworker" style="background: linear-gradient(135deg, #06d6a0, #0fa);" id="selectedCoworkerDept">Department: N/A</span>
+                                                        <span class="badge-coworker" style="background: linear-gradient(135deg, #7209b7, #3a0ca3);" id="selectedCoworkerDesignation">Designation: N/A</span>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearCoworker()">
+                                                    <i class="fas fa-times"></i> Clear
+                                                </button>
+                                            </div>
+
+                                            <!-- Coworker Details Grid -->
+                                            <div class="coworker-details-grid">
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Full Name</span>
+                                                    <span class="detail-value" id="detailName">-</span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Employee ID</span>
+                                                    <span class="detail-value" id="detailEmployeeId">-</span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Department</span>
+                                                    <span class="detail-value" id="detailDepartment">-</span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Designation</span>
+                                                    <span class="detail-value" id="detailDesignation">-</span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Contact Number</span>
+                                                    <span class="detail-value" id="detailPhone">
+                                                        <i class="fas fa-phone me-1"></i> -
+                                                    </span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Ticket Number</span>
+                                                    <span class="detail-value" id="detailTicketNumber">
+                                                        <i class="fas fa-ticket-alt me-1"></i> Will be assigned
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- No Coworker Selected Message -->
+                                <div id="noCoworkerSelected" class="text-center py-4" style="display: block;">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h5>No Coworker Selected</h5>
+                                    <p class="text-muted">Please select a coworker from the dropdown above</p>
+                                </div>
+                            </div>
+
+                            <!-- New Worker Form -->
+                            <div id="newWorkerForm" class="new-worker-form" style="display: none;">
+                                <div class="new-worker-header">
+                                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>New Worker Details</h5>
+                                    <p class="mb-0 small">Enter details for a worker not in the system</p>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">First Name *</label>
+                                        <input type="text" class="form-control" id="new_first_name" name="new_first_name" placeholder="Enter first name">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Last Name *</label>
+                                        <input type="text" class="form-control" id="new_last_name" name="new_last_name" placeholder="Enter last name">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Employee ID *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">EMP</span>
+                                            <input type="text" class="form-control" id="new_employee_id" name="new_employee_id" placeholder="Enter ID number">
+                                        </div>
+                                        <small class="form-text text-muted">Format: EMP followed by numbers (e.g., EMP1001)</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Department *</label>
+                                        <select class="form-select" id="new_department" name="new_department">
+                                            <option value="">Select Department</option>
+                                            <option value="Weaving">Weaving</option>
+                                            <option value="Spinning">Spinning</option>
+                                            <option value="Dyeing">Dyeing</option>
+                                            <option value="Finishing">Finishing</option>
+                                            <option value="Quality Control">Quality Control</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Administration">Administration</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Designation</label>
+                                        <input type="text" class="form-control" id="new_designation" name="new_designation" placeholder="Enter designation">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Contact Number</label>
+                                        <input type="tel" class="form-control" id="new_phone" name="new_phone" placeholder="Enter contact number">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold">Email Address (Optional)</label>
+                                        <input type="email" class="form-control" id="new_email" name="new_email" placeholder="Enter email address">
+                                        <small class="form-text text-muted">Leave blank if not available</small>
+                                    </div>
+                                </div>
+
+                                <!-- New Worker Summary -->
+                                <div id="newWorkerSummary" class="selected-coworker mt-3" style="display: none;">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="coworker-avatar" style="background: linear-gradient(135deg, #f72585, #7209b7);">
+                                            <i class="fas fa-user-plus"></i>
+                                        </div>
+                                        <div class="coworker-info">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h4 class="mb-1" id="newWorkerName">New Worker</h4>
+                                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                                        <span class="badge-new-worker" id="newWorkerId">ID: EMP</span>
+                                                        <span class="badge-new-worker" style="background: linear-gradient(135deg, #06d6a0, #0fa);" id="newWorkerDept">Department: Not set</span>
+                                                        <span class="badge-new-worker" style="background: linear-gradient(135deg, #7209b7, #3a0ca3);" id="newWorkerDesignation">Designation: Not set</span>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearNewWorker()">
+                                                    <i class="fas fa-times"></i> Clear
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ticket Number for New Worker -->
+                                <div class="ticket-section mt-3">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-ticket-alt fa-lg me-3" style="color: #7209b7;"></i>
+                                        <div>
+                                            <h5 class="mb-1">Leave Ticket Number</h5>
+                                            <p class="small text-muted mb-0">Enter a ticket number for tracking</p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="new_worker_ticket_number"
+                                                   name="new_worker_ticket_number"
+                                                   placeholder="Enter ticket number (e.g., HR-TKT-2024-001)">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="button" class="btn btn-outline-primary w-100" onclick="generateNewWorkerTicketNumber()">
+                                                <i class="fas fa-sync-alt me-1"></i> Generate
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Ticket number helps in tracking and reference for new workers.
+                                    </div>
+                                </div>
+
+                                <!-- New Worker Note -->
+                                <div class="alert alert-info mt-3">
+                                    <div class="d-flex">
+                                        <i class="fas fa-info-circle fa-2x me-3 align-self-start"></i>
+                                        <div>
+                                            <h5 class="mb-2">Note About New Workers</h5>
+                                            <p class="mb-2">When applying leave for a new worker:</p>
+                                            <ul class="mb-0">
+                                                <li>The worker will be added to the system as a temporary record</li>
+                                                <li>HR will need to complete their profile later</li>
+                                                <li>Leave will be approved based on HR policy for new workers</li>
+                                                <li>Ensure all details are accurate before submitting</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Authorization Note -->
+                            <div id="authorizationNote" class="alert alert-warning mt-3">
+                                <div class="d-flex">
+                                    <i class="fas fa-exclamation-triangle fa-2x me-3 align-self-start"></i>
+                                    <div>
+                                        <h5 class="mb-2">Authorization Note</h5>
+                                        <p class="mb-2">By applying leave for a coworker, you confirm that:</p>
+                                        <ul class="mb-0">
+                                            <li>You have proper authorization to apply leave on behalf of <strong id="authCoworkerName">this employee</strong></li>
+                                            <li>The coworker has been informed about this leave application</li>
+                                            <li>You will be listed as the "Applied By" person in the leave record</li>
+                                            <li>All provided information is accurate and complete</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Leave Type Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3"><i class="fas fa-tag me-2"></i>Select Leave Type</label>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="coworker-option leave-type-option" data-type="Annual">
+                                        <div class="leave-type-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                            <i class="fas fa-umbrella-beach text-success fa-2x"></i>
+                                        </div>
+                                        <h5 class="text-center mb-1">Annual</h5>
+                                        <p class="text-center small mb-0">Paid Leave</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="coworker-option leave-type-option" data-type="Sick">
+                                        <div class="leave-type-icon" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);">
+                                            <i class="fas fa-heartbeat text-danger fa-2x"></i>
+                                        </div>
+                                        <h5 class="text-center mb-1">Sick</h5>
+                                        <p class="text-center small mb-0">Medical Leave</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="coworker-option leave-type-option" data-type="Casual">
+                                        <div class="leave-type-icon" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);">
+                                            <i class="fas fa-coffee text-purple fa-2x"></i>
+                                        </div>
+                                        <h5 class="text-center mb-1">Casual</h5>
+                                        <p class="text-center small mb-0">Personal Leave</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="coworker-option leave-type-option" data-type="Emergency">
+                                        <div class="leave-type-icon" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                                            <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                                        </div>
+                                        <h5 class="text-center mb-1">Emergency</h5>
+                                        <p class="text-center small mb-0">Urgent Leave</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="leave_type" id="leave_type" required>
+                        </div>
+
+                        <!-- Date Selection -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label fw-bold">
+                                    <i class="fas fa-calendar-day calendar-icon"></i>Start Date
+                                </label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label fw-bold">
+                                    <i class="fas fa-calendar-week calendar-icon"></i>End Date
+                                </label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                        </div>
+
+                        <!-- Days Counter -->
+                        <div class="days-counter">
+                            <i class="fas fa-calculator me-2"></i>
+                            Total Working Days: <span id="totalDays">0</span> days
+                        </div>
+
+                        <!-- Reason for Leave -->
+                        <div class="mb-4">
+                            <label for="reason" class="form-label fw-bold">
+                                <i class="fas fa-comment-dots me-2"></i>Reason for Leave
+                            </label>
+                            <textarea class="form-control" id="reason" name="reason" rows="4"
+                                      placeholder="Please provide a detailed reason for the leave application..." required></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span id="reasonHelpText">
+                                    Be specific about the reason. Approval depends on the clarity of your request.
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Applied By Information (for coworker applications) -->
+                        <div id="appliedBySection" style="display: none;" class="mb-4">
+                            <div class="border rounded p-3 bg-light">
+                                <h5 class="mb-3"><i class="fas fa-user-check me-2"></i>Applied By</h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="coworker-avatar" style="width: 50px; height: 50px; font-size: 20px;">
+                                        <i class="fas fa-user-tie"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h6 class="mb-1">{{ current_user.get_full_name() }}</h6>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="badge-coworker">
+                                                <i class="fas fa-id-badge me-1"></i>{{ current_user.employee_id }}
+                                            </span>
+                                            <span class="badge-coworker" style="background: linear-gradient(135deg, #06d6a0, #0fa);">
+                                                <i class="fas fa-building me-1"></i>{{ current_user.department }}
+                                            </span>
+                                            <span class="badge-coworker" style="background: linear-gradient(135deg, #7209b7, #3a0ca3);">
+                                                <i class="fas fa-briefcase me-1"></i>{{ current_user.designation }}
+                                            </span>
+                                        </div>
+                                        {% if current_user.phone %}
+                                        <div class="mt-2">
+                                            <span class="text-muted">
+                                                <i class="fas fa-phone me-1"></i>{{ current_user.phone }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                You will be recorded as the person who submitted this application. Your details will be visible to HR.
+                            </small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            <span id="submitBtnText">Submit Leave Application</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Leave Policy Information -->
+                <div class="leave-card">
+                    <h4><i class="fas fa-file-contract me-2"></i>Leave Policy Guidelines</h4>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-check-circle text-success fa-lg me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">Annual Leave</h6>
+                                    <p class="small mb-0">12 days per year, requires 7 days advance notice</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-check-circle text-success fa-lg me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">Sick Leave</h6>
+                                    <p class="small mb-0">10 days per year, medical certificate required for 3+ days</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-check-circle text-success fa-lg me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">Casual Leave</h6>
+                                    <p class="small mb-0">7 days per year, maximum 2 consecutive days</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-check-circle text-success fa-lg me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">Emergency Leave</h6>
+                                    <p class="small mb-0">5 days per year, requires immediate supervisor approval</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Leave Balance & Recent Applications -->
+            <div class="col-lg-4">
+                <!-- Leave Balance Summary (Only for self) -->
+                <div id="leaveBalanceSection" class="leave-card">
+                    <h4 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Your Leave Balance</h4>
+
+                    <div class="leave-balance-card">
+                        <div class="leave-type-icon" style="width: 50px; height: 50px;">
+                            <i class="fas fa-umbrella-beach text-success fa-lg"></i>
+                        </div>
+                        <h3>{{ annual_balance }}</h3>
+                        <p class="mb-0 fw-bold">Annual Leave</p>
+                        <small>12 days per year</small>
+                    </div>
+
+                    <div class="leave-balance-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);">
+                        <div class="leave-type-icon" style="width: 50px; height: 50px;">
+                            <i class="fas fa-heartbeat text-danger fa-lg"></i>
+                        </div>
+                        <h3>{{ sick_balance }}</h3>
+                        <p class="mb-0 fw-bold">Sick Leave</p>
+                        <small>10 days per year</small>
+                    </div>
+
+                    <div class="leave-balance-card" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);">
+                        <div class="leave-type-icon" style="width: 50px; height: 50px;">
+                            <i class="fas fa-coffee text-purple fa-lg"></i>
+                        </div>
+                        <h3>{{ casual_balance if casual_balance is defined else 7 }}</h3>
+                        <p class="mb-0 fw-bold">Casual Leave</p>
+                        <small>7 days per year</small>
+                    </div>
+
+                    <div class="leave-balance-card" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                        <div class="leave-type-icon" style="width: 50px; height: 50px;">
+                            <i class="fas fa-exclamation-triangle text-warning fa-lg"></i>
+                        </div>
+                        <h3>{{ emergency_balance if emergency_balance is defined else 5 }}</h3>
+                        <p class="mb-0 fw-bold">Emergency Leave</p>
+                        <small>5 days per year</small>
+                    </div>
+                </div>
+
+                <!-- Coworker Leave Balance (when selected) -->
+                <div id="coworkerBalanceSection" class="leave-card" style="display: none;">
+                    <h4 class="mb-4"><i class="fas fa-user-friends me-2"></i>Coworker's Leave Info</h4>
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-clock fa-3x text-muted mb-3"></i>
+                        <h5>Leave Balance</h5>
+                        <p class="text-muted" id="balanceInfoText">Coworker's leave balance will be checked by HR during approval</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="balanceInfoDetail">HR will verify available leave balance during the approval process.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Leave Applications -->
+                {% if recent_leaves %}
+                <div class="recent-leaves-section">
+                    <h4><i class="fas fa-history me-2"></i>Recent Applications</h4>
+                    {% for leave in recent_leaves %}
+                    <div class="leave-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ leave.leave_type }} Leave</h6>
+                                <small class="text-muted">
+                                    <i class="far fa-calendar me-1"></i>
+                                    {{ leave.start_date.strftime('%d %b') }} - {{ leave.end_date.strftime('%d %b %Y') }}
+                                </small>
+                            </div>
+                            <span class="status-badge status-{{ leave.status|lower }}">{{ leave.status }}</span>
+                        </div>
+                        <p class="mb-1 small mt-2">{{ leave.reason[:50] }}...</p>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small><i class="fas fa-clock me-1"></i>{{ leave.total_days }} day(s)</small>
+                            <small><i class="far fa-calendar-check me-1"></i>{{ leave.applied_date.strftime('%d %b') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Quick Tips -->
+                <div class="leave-card">
+                    <h5><i class="fas fa-lightbulb me-2"></i>Quick Tips</h5>
+                    <ul class="list-unstyled mt-3">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>Apply leaves at least 3 days in advance</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>Check leave balance before applying</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>Provide complete and accurate information</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>Inform team lead about the leave</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>When applying for coworkers, ensure proper authorization</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>For new workers, verify details with HR first</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // Initialize Select2
+        $(document).ready(function() {
+            $('#coworkerSelect').select2({
+                placeholder: "Search by name, ID, or department",
+                allowClear: true,
+                width: '100%'
+            });
+        });
+
+        // Toggle between self and coworker application
+        const applyForCoworker = document.getElementById('applyForCoworker');
+        const coworkerSection = document.getElementById('coworkerSection');
+        const leaveBalanceSection = document.getElementById('leaveBalanceSection');
+        const coworkerBalanceSection = document.getElementById('coworkerBalanceSection');
+        const appliedBySection = document.getElementById('appliedBySection');
+        const submitBtnText = document.getElementById('submitBtnText');
+        const reasonHelpText = document.getElementById('reasonHelpText');
+        const noCoworkerSelected = document.getElementById('noCoworkerSelected');
+        const authorizationNote = document.getElementById('authorizationNote');
+
+        // Form switch elements
+        const switchExistingBtn = document.getElementById('switchExistingBtn');
+        const switchNewBtn = document.getElementById('switchNewBtn');
+        const existingCoworkerForm = document.getElementById('existingCoworkerForm');
+        const newWorkerForm = document.getElementById('newWorkerForm');
+
+        applyForCoworker.addEventListener('change', function() {
+            if (this.checked) {
+                coworkerSection.style.display = 'block';
+                leaveBalanceSection.style.display = 'none';
+                coworkerBalanceSection.style.display = 'block';
+                appliedBySection.style.display = 'block';
+                submitBtnText.textContent = 'Submit Coworker Leave Application';
+                reasonHelpText.textContent = 'Please provide the reason for the coworker\'s leave application. Include any relevant details.';
+                authorizationNote.style.display = 'block';
+                showExistingCoworkerForm(); // Show existing form by default
+            } else {
+                coworkerSection.style.display = 'none';
+                leaveBalanceSection.style.display = 'block';
+                coworkerBalanceSection.style.display = 'none';
+                appliedBySection.style.display = 'none';
+                submitBtnText.textContent = 'Submit Leave Application';
+                reasonHelpText.textContent = 'Be specific about the reason. Approval depends on the clarity of your request.';
+                clearCoworker();
+                clearNewWorker();
+            }
+        });
+
+        // Show existing coworker form
+        function showExistingCoworkerForm() {
+            switchExistingBtn.classList.add('active');
+            switchNewBtn.classList.remove('active');
+            existingCoworkerForm.style.display = 'block';
+            newWorkerForm.style.display = 'none';
+            document.getElementById('is_new_worker').value = '0';
+            document.getElementById('balanceInfoText').textContent = "Coworker's leave balance will be checked by HR during approval";
+            document.getElementById('balanceInfoDetail').textContent = "HR will verify available leave balance during the approval process.";
+        }
+
+        // Show new worker form
+        function showNewWorkerForm() {
+            switchExistingBtn.classList.remove('active');
+            switchNewBtn.classList.add('active');
+            existingCoworkerForm.style.display = 'none';
+            newWorkerForm.style.display = 'block';
+            document.getElementById('is_new_worker').value = '1';
+            document.getElementById('balanceInfoText').textContent = "New worker - Leave policy will be applied as per HR guidelines";
+            document.getElementById('balanceInfoDetail').textContent = "For new workers, leave approval follows standard company policy.";
+        }
+
+        // Coworker selection (existing worker)
+        $('#coworkerSelect').on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            const coworkerId = selectedOption.val();
+
+            if (coworkerId) {
+                const coworkerName = selectedOption.data('name');
+                const employeeId = selectedOption.data('employee-id');
+                const department = selectedOption.data('department');
+                const designation = selectedOption.data('designation');
+                const phone = selectedOption.data('phone');
+
+                // Update hidden field
+                document.getElementById('coworker_id').value = coworkerId;
+                document.getElementById('is_new_worker').value = '0';
+
+                // Update display names
+                document.getElementById('selectedCoworkerName').textContent = coworkerName;
+                document.getElementById('selectedCoworkerId').textContent = `ID: ${employeeId}`;
+                document.getElementById('selectedCoworkerDept').textContent = `Department: ${department}`;
+                document.getElementById('selectedCoworkerDesignation').textContent = `Designation: ${designation}`;
+                document.getElementById('authCoworkerName').textContent = coworkerName;
+
+                // Update detail grid
+                document.getElementById('detailName').textContent = coworkerName;
+                document.getElementById('detailEmployeeId').textContent = employeeId;
+                document.getElementById('detailDepartment').textContent = department || 'Not specified';
+                document.getElementById('detailDesignation').textContent = designation || 'Not specified';
+                document.getElementById('detailPhone').innerHTML = phone ?
+                    `<i class="fas fa-phone me-1"></i> ${phone}` :
+                    '<i class="fas fa-phone-slash me-1"></i> Not provided';
+
+                // Show selected coworker section
+                document.getElementById('selectedCoworker').style.display = 'block';
+                noCoworkerSelected.style.display = 'none';
+            } else {
+                clearCoworker();
+            }
+        });
+
+        function clearCoworker() {
+            $('#coworkerSelect').val(null).trigger('change');
+            document.getElementById('coworker_id').value = '';
+            document.getElementById('selectedCoworker').style.display = 'none';
+            noCoworkerSelected.style.display = 'block';
+        }
+
+        // New worker form handling
+        function updateNewWorkerSummary() {
+            const firstName = document.getElementById('new_first_name').value.trim();
+            const lastName = document.getElementById('new_last_name').value.trim();
+            const employeeId = document.getElementById('new_employee_id').value.trim();
+            const department = document.getElementById('new_department').value;
+            const designation = document.getElementById('new_designation').value.trim();
+
+            if (firstName || lastName || employeeId) {
+                const fullName = `${firstName} ${lastName}`.trim();
+                document.getElementById('newWorkerName').textContent = fullName || 'New Worker';
+                document.getElementById('newWorkerId').textContent = `ID: ${employeeId ? 'EMP' + employeeId : 'Not set'}`;
+                document.getElementById('newWorkerDept').textContent = `Department: ${department || 'Not set'}`;
+                document.getElementById('newWorkerDesignation').textContent = `Designation: ${designation || 'Not set'}`;
+                document.getElementById('newWorkerSummary').style.display = 'block';
+                document.getElementById('authCoworkerName').textContent = fullName || 'this new worker';
+            } else {
+                document.getElementById('newWorkerSummary').style.display = 'none';
+            }
+        }
+
+        // Add event listeners to new worker form fields
+        document.getElementById('new_first_name').addEventListener('input', updateNewWorkerSummary);
+        document.getElementById('new_last_name').addEventListener('input', updateNewWorkerSummary);
+        document.getElementById('new_employee_id').addEventListener('input', updateNewWorkerSummary);
+        document.getElementById('new_department').addEventListener('change', updateNewWorkerSummary);
+        document.getElementById('new_designation').addEventListener('input', updateNewWorkerSummary);
+
+        function clearNewWorker() {
+            document.getElementById('new_first_name').value = '';
+            document.getElementById('new_last_name').value = '';
+            document.getElementById('new_employee_id').value = '';
+            document.getElementById('new_department').value = '';
+            document.getElementById('new_designation').value = '';
+            document.getElementById('new_phone').value = '';
+            document.getElementById('new_email').value = '';
+            document.getElementById('new_worker_ticket_number').value = '';
+            document.getElementById('newWorkerSummary').style.display = 'none';
+            document.getElementById('coworker_id').value = '';
+            document.getElementById('is_new_worker').value = '1';
+        }
+
+        // Generate ticket number
+        function generateTicketNumber() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            const ticketNumber = `TXT-LEAVE-${year}${month}${day}-${random}`;
+            document.getElementById('ticket_number').value = ticketNumber;
+        }
+
+        // Generate ticket number for new worker
+        function generateNewWorkerTicketNumber() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            const ticketNumber = `TXT-NEW-${year}${month}${day}-${random}`;
+            document.getElementById('new_worker_ticket_number').value = ticketNumber;
+        }
+
+        // Leave Type Selection
+        document.querySelectorAll('.leave-type-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove selected class from all options
+                document.querySelectorAll('.leave-type-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+
+                // Add selected class to clicked option
+                this.classList.add('selected');
+
+                // Set hidden input value
+                const leaveType = this.getAttribute('data-type');
+                document.getElementById('leave_type').value = leaveType;
+
+                // Update days calculation
+                calculateWorkingDays();
+            });
+        });
+
+        // Date Calculation Function
+        function calculateWorkingDays() {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+
+            if (!startDate || !endDate) {
+                document.getElementById('totalDays').textContent = '0';
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // Validate dates
+            if (end < start) {
+                document.getElementById('totalDays').textContent = '0';
+                showAlert('End date cannot be before start date!', 'danger');
+                document.getElementById('end_date').value = '';
+                return;
+            }
+
+            // Calculate working days (excluding weekends)
+            let totalDays = 0;
+            let current = new Date(start);
+
+            while (current <= end) {
+                const day = current.getDay();
+                // Skip weekends (0 = Sunday, 6 = Saturday)
+                if (day !== 0 && day !== 6) {
+                    totalDays++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            document.getElementById('totalDays').textContent = totalDays;
+
+            // Check if applying for coworker
+            if (applyForCoworker.checked) {
+                const isNewWorker = document.getElementById('is_new_worker').value === '1';
+                if (!isNewWorker) {
+                    const coworkerId = document.getElementById('coworker_id').value;
+                    if (!coworkerId) {
+                        showAlert('Please select a coworker before applying leave!', 'warning');
+                    }
+                }
+            }
+        }
+
+        // Show Alert Function
+        function showAlert(message, type) {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.custom-alert');
+            existingAlerts.forEach(alert => alert.remove());
+
+            // Create new alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} custom-alert alert-notification alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            // Insert after form
+            document.querySelector('form').insertAdjacentElement('beforebegin', alertDiv);
+        }
+
+        // Form Validation
+        document.getElementById('leaveForm').addEventListener('submit', function(e) {
+            const leaveType = document.getElementById('leave_type').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const totalDays = parseInt(document.getElementById('totalDays').textContent);
+            const isCoworkerApplication = applyForCoworker.checked;
+            const isNewWorker = document.getElementById('is_new_worker').value === '1';
+            const coworkerId = document.getElementById('coworker_id').value;
+
+            // Validation for coworker application
+            if (isCoworkerApplication) {
+                if (isNewWorker) {
+                    // Validate new worker form
+                    const firstName = document.getElementById('new_first_name').value.trim();
+                    const lastName = document.getElementById('new_last_name').value.trim();
+                    const employeeId = document.getElementById('new_employee_id').value.trim();
+                    const department = document.getElementById('new_department').value;
+
+                    if (!firstName) {
+                        e.preventDefault();
+                        showAlert('Please enter first name for the new worker!', 'danger');
+                        return;
+                    }
+
+                    if (!lastName) {
+                        e.preventDefault();
+                        showAlert('Please enter last name for the new worker!', 'danger');
+                        return;
+                    }
+
+                    if (!employeeId) {
+                        e.preventDefault();
+                        showAlert('Please enter employee ID for the new worker!', 'danger');
+                        return;
+                    }
+
+                    if (!department) {
+                        e.preventDefault();
+                        showAlert('Please select department for the new worker!', 'danger');
+                        return;
+                    }
+                } else {
+                    // Validate existing coworker
+                    if (!coworkerId) {
+                        e.preventDefault();
+                        showAlert('Please select a coworker for whom you are applying leave!', 'danger');
+                        return;
+                    }
+                }
+            }
+
+            if (!leaveType) {
+                e.preventDefault();
+                showAlert('Please select a leave type!', 'danger');
+                return;
+            }
+
+            if (!startDate || !endDate) {
+                e.preventDefault();
+                showAlert('Please select both start and end dates!', 'danger');
+                return;
+            }
+
+            if (totalDays === 0) {
+                e.preventDefault();
+                showAlert('Please select valid dates (excluding weekends)!', 'danger');
+                return;
+            }
+
+            // Check if dates are in the past
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = new Date(startDate);
+
+            if (start < today) {
+                e.preventDefault();
+                showAlert('Cannot apply for leave in the past!', 'danger');
+                return;
+            }
+
+            // Confirmation for coworker application
+            if (isCoworkerApplication) {
+                let selectedCoworkerName;
+                let ticketNumber;
+                const reason = document.getElementById('reason').value;
+
+                if (isNewWorker) {
+                    const firstName = document.getElementById('new_first_name').value.trim();
+                    const lastName = document.getElementById('new_last_name').value.trim();
+                    selectedCoworkerName = `${firstName} ${lastName}`.trim();
+                    ticketNumber = document.getElementById('new_worker_ticket_number').value;
+                } else {
+                    selectedCoworkerName = document.getElementById('selectedCoworkerName').textContent;
+                    ticketNumber = document.getElementById('ticket_number').value;
+                }
+
+                let confirmationMessage = `Are you sure you want to apply ${totalDays} day(s) of ${leaveType} leave for ${selectedCoworkerName}?`;
+
+                if (isNewWorker) {
+                    confirmationMessage += '\n\nThis will create a new worker record in the system.';
+                }
+
+                if (ticketNumber) {
+                    confirmationMessage += `\n\nTicket Number: ${ticketNumber}`;
+                }
+
+                if (reason) {
+                    confirmationMessage += `\n\nReason: ${reason.substring(0, 100)}${reason.length > 100 ? '...' : ''}`;
+                }
+
+                if (!confirm(confirmationMessage)) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Set minimum date to today for start date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').min = today;
+        document.getElementById('end_date').min = today;
+
+        // Auto-update end date min when start date changes
+        document.getElementById('start_date').addEventListener('change', function() {
+            document.getElementById('end_date').min = this.value;
+            calculateWorkingDays();
+        });
+
+        document.getElementById('end_date').addEventListener('change', calculateWorkingDays);
+
+        // Initialize with today's date
+        document.getElementById('start_date').value = today;
+        document.getElementById('end_date').value = today;
+        calculateWorkingDays();
+
+        // Auto-select annual leave by default
+        document.querySelector('.leave-type-option[data-type="Annual"]').click();
+    </script>
+</body>
+</html>

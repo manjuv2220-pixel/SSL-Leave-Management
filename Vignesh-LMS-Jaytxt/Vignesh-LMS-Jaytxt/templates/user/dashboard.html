@@ -1,0 +1,304 @@
+{% extends "layout.html" %}
+
+{% block title %}User Dashboard - Textile Leave Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-industry me-2"></i>TextileLeave Pro</h3>
+                <small>Employee Portal</small>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h5 class="mt-2 mb-0">{{ current_user.get_full_name() }}</h5>
+                <small class="text-muted">{{ current_user.designation }}</small>
+                <p class="small mt-2 mb-0">{{ current_user.employee_id }}</p>
+            </div>
+            
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('user_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('apply_leave') }}">
+                        <i class="fas fa-calendar-plus me-2"></i>Apply Leave
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('leave_status') }}">
+                        <i class="fas fa-history me-2"></i>Leave Status
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_attendance') }}">
+                        <i class="fas fa-clock me-2"></i>My Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_profile') }}">
+                        <i class="fas fa-user-cog me-2"></i>Profile
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="{{ url_for('index') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Home page
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="welcome-message">
+                            <h1>Welcome, {{ current_user.first_name }}</h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-calendar me-1"></i>
+                                <span class="current-date"></span> | 
+                                <span class="current-time"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{{ url_for('apply_leave') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus me-1"></i>Apply Leave
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ total_leaves }}</h3>
+                        <p>Total Leaves</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ approved_leaves }}</h3>
+                        <p>Approved Leaves</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ pending_leaves }}</h3>
+                        <p>Pending Leaves</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{% if total_leaves > 0 %}{{ ((approved_leaves/total_leaves)*100)|int }}{% else %}0{% endif %}%</h3>
+                        <p>Approval Rate</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today's Attendance and Leave Balance -->
+            <div class="row mt-4">
+                <div class="col-lg-6">
+                    <div class="today-attendance">
+                        <div class="card-header">
+                            <i class="fas fa-clock me-2"></i>Today's Attendance
+                        </div>
+                        <div class="card-body">
+                            <div class="attendance-status">
+                                {% if today_attendance %}
+                                <div class="status-icon {{ today_attendance.status|lower }}">
+                                    <i class="fas fa-{% if today_attendance.status == 'Present' %}check{% else %}times{% endif %}"></i>
+                                </div>
+                                <h4 class="mb-3">{{ today_attendance.status }}</h4>
+                                {% if today_attendance.check_in %}
+                                <p class="time-display">{{ today_attendance.check_in.strftime('%H:%M') }}</p>
+                                <small>Check-in Time</small>
+                                {% if today_attendance.check_out %}
+                                <p class="time-display mt-3">{{ today_attendance.check_out.strftime('%H:%M') }}</p>
+                                <small>Check-out Time</small>
+                                {% endif %}
+                                {% endif %}
+                                {% else %}
+                                <div class="status-icon absent">
+                                    <i class="fas fa-times"></i>
+                                </div>
+                                <h4 class="mb-3">Not Marked</h4>
+                                <p class="text-muted">Attendance not marked for today</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="leave-balance">
+                        <div class="card-header">
+                            <i class="fas fa-wallet me-2"></i>Leave Balance
+                        </div>
+                        <div class="card-body">
+                            <div class="balance-item">
+                                <div class="balance-header">
+                                    <h5>Annual Leave</h5>
+                                    <span>{{ annual_balance }}/{{ config.ANNUAL_LEAVE_DAYS }} days</span>
+                                </div>
+                                <div class="balance-bar">
+                                    <div class="balance-fill" style="width: {{ (annual_balance/config.ANNUAL_LEAVE_DAYS)*100 }}%; background: #667eea;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="balance-item">
+                                <div class="balance-header">
+                                    <h5>Sick Leave</h5>
+                                    <span>{{ sick_balance }}/{{ config.SICK_LEAVE_DAYS }} days</span>
+                                </div>
+                                <div class="balance-bar">
+                                    <div class="balance-fill" style="width: {{ (sick_balance/config.SICK_LEAVE_DAYS)*100 }}%; background: #43e97b;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="balance-item">
+                                <div class="balance-header">
+                                    <h5>Casual Leave</h5>
+                                    <span>8/{{ config.CASUAL_LEAVE_DAYS }} days</span>
+                                </div>
+                                <div class="balance-bar">
+                                    <div class="balance-fill" style="width: 100%; background: #f093fb;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <a href="{{ url_for('apply_leave') }}" class="btn btn-primary">
+                                    <i class="fas fa-calendar-plus me-1"></i>Apply for Leave
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Leaves -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-history me-2"></i>Recent Leave Applications</span>
+                    <a href="{{ url_for('leave_status') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_leaves %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Leave Type</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Days</th>
+                                    <th>Applied On</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in recent_leaves %}
+                                <tr>
+                                    <td>{{ leave.leave_type }}</td>
+                                    <td>{{ leave.start_date.strftime('%d %b %Y') }}</td>
+                                    <td>{{ leave.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>{{ leave.total_days }}</td>
+                                    <td>{{ leave.applied_date.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ leave.status|lower }}">
+                                            {{ leave.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5>No leave applications yet</h5>
+                        <p class="text-muted">Apply for your first leave to get started</p>
+                        <a href="{{ url_for('apply_leave') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus me-1"></i>Apply Leave
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Upcoming Holidays -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-calendar-day me-2"></i>Upcoming Holidays
+                </div>
+                <div class="card-body">
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-umbrella-beach"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h5>New Year's Day</h5>
+                                <p>January 1, 2024 - National Holiday</p>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-umbrella-beach"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h5>Company Foundation Day</h5>
+                                <p>March 15, 2024 - Company Holiday</p>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-umbrella-beach"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h5>Eid al-Fitr</h5>
+                                <p>April 10, 2024 - Festival Holiday</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

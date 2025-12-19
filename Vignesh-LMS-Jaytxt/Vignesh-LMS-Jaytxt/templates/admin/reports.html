@@ -1,0 +1,706 @@
+{% extends "layout.html" %}
+
+{% block title %}Reports - Textile Leave Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+    .report-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        height: 100%;
+    }
+    .report-card h4 {
+        color: #333;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    .badge-present { background-color: #28a745; }
+    .badge-absent { background-color: #dc3545; }
+    .badge-late { background-color: #ffc107; color: #212529; }
+    .badge-half-day { background-color: #17a2b8; }
+    .badge-on-leave { background-color: #6c757d; }
+    .leave-form-options {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    .form-select-sm {
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-industry me-2"></i>TextileLeave Pro</h3>
+                <small>Admin Panel</small>
+            </div>
+
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h5 class="mt-2 mb-0">{{ current_user.get_full_name() }}</h5>
+                <small class="text-muted">Administrator</small>
+            </div>
+
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_employees') }}">
+                        <i class="fas fa-users me-2"></i>Employees
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_leaves') }}">
+                        <i class="fas fa-calendar-check me-2"></i>Leave Requests
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_attendance') }}">
+                        <i class="fas fa-clock me-2"></i>Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('admin_reports') }}">
+                        <i class="fas fa-chart-bar me-2"></i>Reports
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="welcome-message">
+                            <h1>Reports & Analytics</h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ today.strftime('%B %Y') }} |
+                                Comprehensive System Analytics
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-primary" id="exportExcelBtn">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <button type="button" class="btn btn-outline-success" id="printReportBtn">
+                                <i class="fas fa-print me-1"></i>Print
+                            </button>
+                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#leaveFormModal">
+                                <i class="fas fa-file-alt me-1"></i>Leave Form
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="report-card text-center">
+                        <div class="stat-number">
+                            {{ total_employees }}
+                        </div>
+                        <div class="stat-label">Total Employees</div>
+                        <div class="mt-3">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="report-card text-center">
+                        <div class="stat-number">
+                            {{ present_days }}
+                        </div>
+                        <div class="stat-label">Present Days ({{ today.strftime('%B') }})</div>
+                        <div class="mt-3">
+                            <i class="fas fa-user-check fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="report-card text-center">
+                        <div class="stat-number">
+                            {{ approved_leaves }}
+                        </div>
+                        <div class="stat-label">Approved Leaves</div>
+                        <div class="mt-3">
+                            <i class="fas fa-calendar-check fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="report-card text-center">
+                        <div class="stat-number">
+                            {{ "%.1f"|format(attendance_rate) }}%
+                        </div>
+                        <div class="stat-label">Attendance Rate</div>
+                        <div class="mt-3">
+                            <i class="fas fa-chart-line fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Reports -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <h4><i class="fas fa-calendar me-2"></i>Attendance Summary ({{ today.strftime('%B %Y') }})</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set total_days = attendance_summary|sum(attribute='count') %}
+                                    {% for status, count in attendance_summary %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-{{ status|lower|replace('-', '') }}">
+                                                {{ status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ count }}</td>
+                                        <td>
+                                            {% set percentage = (count / total_days * 100) if total_days > 0 else 0 %}
+                                            <div class="progress">
+                                                <div class="progress-bar bg-{{ status|lower|replace('-', '') }}"
+                                                     style="width: {{ percentage|round(1) }}%">
+                                                    {{ "%.1f"|format(percentage) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <h4><i class="fas fa-umbrella-beach me-2"></i>Leave Summary</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Leave Type</th>
+                                        <th>Applications</th>
+                                        <th>Total Days</th>
+                                        <th>Avg. Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave_type, count, total_days in leave_summary %}
+                                    <tr>
+                                        <td>{{ leave_type }}</td>
+                                        <td>{{ count }}</td>
+                                        <td>{{ total_days }}</td>
+                                        <td>
+                                            {% set avg_duration = (total_days / count) if count > 0 else 0 %}
+                                            {{ "%.1f"|format(avg_duration) }} days
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Department and Trend Reports -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <h4><i class="fas fa-building me-2"></i>Department Distribution</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Department</th>
+                                        <th>Employees</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set total_emps = dept_summary|sum(attribute='count') %}
+                                    {% for department, count in dept_summary %}
+                                    <tr>
+                                        <td>{{ department or 'Not Specified' }}</td>
+                                        <td>{{ count }}</td>
+                                        <td>
+                                            {% set percentage = (count / total_emps * 100) if total_emps > 0 else 0 %}
+                                            <div class="progress">
+                                                <div class="progress-bar"
+                                                     style="width: {{ percentage|round(1) }}%">
+                                                    {{ "%.1f"|format(percentage) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <h4><i class="fas fa-chart-line me-2"></i>Attendance Trend (Last 6 Months)</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Present Days</th>
+                                        <th>Attendance Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for month_data in monthly_trend %}
+                                    <tr>
+                                        <td>{{ month_data.month }}</td>
+                                        <td>{{ month_data.present }}</td>
+                                        <td>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-success"
+                                                     style="width: {{ month_data.rate|round(1) }}%">
+                                                    {{ "%.1f"|format(month_data.rate) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-file-export me-2"></i>Export Reports
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-primary w-100" onclick="exportReport('excel')">
+                                <i class="fas fa-file-excel me-2"></i>Excel Report
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-success w-100" onclick="exportReport('pdf')">
+                                <i class="fas fa-file-pdf me-2"></i>PDF Report
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-info w-100" onclick="exportReport('csv')">
+                                <i class="fas fa-file-csv me-2"></i>CSV Export
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-warning w-100" id="printSummaryBtn">
+                                <i class="fas fa-print me-2"></i>Print Summary
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Leave Form Download Section -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="leave-form-options">
+                                <h6><i class="fas fa-file-download me-2"></i>Download Leave Forms</h6>
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="employeeSelect">
+                                            <option value="">Select Employee</option>
+                                            {% for employee in employees %}
+                                            <option value="{{ employee.id }}">{{ employee.get_full_name() }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select form-select-sm" id="formTypeSelect">
+                                            <option value="blank">Blank Leave Form</option>
+                                            <option value="sick">Sick Leave Form</option>
+                                            <option value="casual">Casual Leave Form</option>
+                                            <option value="annual">Annual Leave Form</option>
+                                            <option value="emergency">Emergency Leave Form</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-primary w-100 btn-sm" onclick="downloadLeaveForm()">
+                                            <i class="fas fa-download me-2"></i>Download Form
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Form Modal -->
+<div class="modal fade" id="leaveFormModal" tabindex="-1" aria-labelledby="leaveFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leaveFormModalLabel">
+                    <i class="fas fa-file-alt me-2"></i>Generate Leave Form
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="leaveFormGenerator">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="modalEmployeeSelect" class="form-label">Employee</label>
+                            <select class="form-select" id="modalEmployeeSelect" required>
+                                <option value="">Select Employee</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.id }}">{{ employee.get_full_name() }} - {{ employee.department }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modalFormType" class="form-label">Form Type</label>
+                            <select class="form-select" id="modalFormType" required>
+                                <option value="application">Leave Application Form</option>
+                                <option value="sick">Sick Leave Certificate</option>
+                                <option value="annual">Annual Leave Form</option>
+                                <option value="maternity">Maternity Leave Form</option>
+                                <option value="paternity">Paternity Leave Form</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason for Leave</label>
+                        <textarea class="form-control" id="reason" rows="3" placeholder="Enter reason for leave"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Format</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="format" id="pdfFormat" value="pdf" checked>
+                            <label class="form-check-label" for="pdfFormat">PDF</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="format" id="docFormat" value="doc">
+                            <label class="form-check-label" for="docFormat">DOC</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="format" id="excelFormat" value="excel">
+                            <label class="form-check-label" for="excelFormat">Excel</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="generateLeaveForm()">
+                    <i class="fas fa-file-download me-2"></i>Generate & Download
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Initialize modal if needed
+    var leaveFormModal = new bootstrap.Modal(document.getElementById('leaveFormModal'), {
+        keyboard: false
+    });
+
+    // Set today's date for date inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+    });
+
+    // Print functionality
+    document.getElementById('printSummaryBtn').addEventListener('click', function() {
+        window.print();
+    });
+
+    document.getElementById('printReportBtn').addEventListener('click', function() {
+        window.print();
+    });
+
+    // Export functionality
+    function exportReport(format) {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        button.disabled = true;
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('format', format);
+        formData.append('report_type', 'summary');
+
+        // Send request to server
+        fetch('{{ url_for("admin_reports") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Set filename based on format
+            const date = new Date().toISOString().split('T')[0];
+            a.download = `reports_summary_${date}.${format}`;
+
+            // Trigger download
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate report. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+
+    // Leave form download functionality
+    function downloadLeaveForm() {
+        const employeeId = document.getElementById('employeeSelect').value;
+        const formType = document.getElementById('formTypeSelect').value;
+
+        if (!employeeId && formType !== 'blank') {
+            alert('Please select an employee for this form type.');
+            return;
+        }
+
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        button.disabled = true;
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('employee_id', employeeId);
+        formData.append('form_type', formType);
+        formData.append('action', 'download_leave_form');
+
+        // Send request to server
+        fetch('{{ url_for("admin_reports") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Get employee name for filename
+            const employeeSelect = document.getElementById('employeeSelect');
+            const employeeName = employeeSelect.options[employeeSelect.selectedIndex].text || 'blank';
+            const filename = `leave_form_${employeeName.replace(/\s+/g, '_')}_${formType}.pdf`;
+
+            a.download = filename;
+
+            // Trigger download
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate leave form. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+
+    // Generate leave form from modal
+    function generateLeaveForm() {
+        const employeeId = document.getElementById('modalEmployeeSelect').value;
+        const formType = document.getElementById('modalFormType').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const reason = document.getElementById('reason').value;
+        const format = document.querySelector('input[name="format"]:checked').value;
+
+        if (!employeeId) {
+            alert('Please select an employee.');
+            return;
+        }
+
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        button.disabled = true;
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('employee_id', employeeId);
+        formData.append('form_type', formType);
+        formData.append('start_date', startDate);
+        formData.append('end_date', endDate);
+        formData.append('reason', reason);
+        formData.append('format', format);
+        formData.append('action', 'generate_custom_form');
+
+        // Send request to server
+        fetch('{{ url_for("admin_reports") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Get employee name for filename
+            const employeeSelect = document.getElementById('modalEmployeeSelect');
+            const employeeName = employeeSelect.options[employeeSelect.selectedIndex].text.split(' - ')[0] || 'employee';
+            const filename = `${formType}_form_${employeeName.replace(/\s+/g, '_')}_${startDate}_to_${endDate}.${format}`;
+
+            a.download = filename;
+
+            // Trigger download
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('leaveFormModal')).hide();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate leave form. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+
+    // Excel export button
+    document.getElementById('exportExcelBtn').addEventListener('click', function() {
+        exportReport('excel');
+    });
+</script>
+{% endblock %}

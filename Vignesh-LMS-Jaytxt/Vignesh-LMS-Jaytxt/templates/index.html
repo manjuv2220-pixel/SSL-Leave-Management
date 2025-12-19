@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+
+{% block title %}Home - Textile Leave Management{% endblock %}
+
+{% block body %}
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+    <img src="{{ url_for('static', filename='logo.png') }}"
+         alt="Logo" width="30" height="30"
+    <i class="fas fa-industry text-primary me-2"></i>
+    Super Sales India LTD Jay Textiles Unit II
+</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#features">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#about">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-primary ms-2" href="{{ url_for('register') }}">Register</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1>Streamline Super Sales India LTD Jay Textiles Unit II Leave Management</h1>
+                <p>Efficiently manage employee leaves, track attendance, and optimize workforce planning with our comprehensive leave management system designed specifically for textile industries.</p>
+                <div class="mt-4">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Get Started
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-play-circle me-2"></i>Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
+                     alt="Textile Industry" class="img-fluid rounded-3 shadow-lg">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Powerful Features</h2>
+            <p class="text-muted">Everything you need to manage your textile workforce efficiently</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h4>Leave Management</h4>
+                    <p class="text-muted">Easy application, approval, and tracking of all types of leaves including annual, sick, and casual leaves.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h4>Attendance Tracking</h4>
+                    <p class="text-muted">Real-time attendance tracking with check-in/out functionality and shift management for textile operations.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h4>Analytics & Reports</h4>
+                    <p class="text-muted">Comprehensive reports and analytics for better workforce planning and management decisions.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h4>Mobile Friendly</h4>
+                    <p class="text-muted">Access the system from any device with a responsive design that works perfectly on mobile and tablets.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h4>Smart Notifications</h4>
+                    <p class="text-muted">Get instant notifications for leave approvals, attendance alerts, and important updates.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>Secure & Reliable</h4>
+                    <p class="text-muted">Enterprise-grade security with role-based access control and data encryption for complete protection.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-4">Designed for Textile Industry</h2>
+                <p class="lead">Our system understands the unique challenges of textile manufacturing:</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Shift-based attendance tracking</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Bulk leave management during festivals</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Compliance with textile labor regulations</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Integration with payroll systems</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Multi-department support (Weaving, Spinning, Dyeing, etc.)</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
+                     alt="Textile Factory" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h4 class="mb-4">TextileLeave Pro</h4>
+                <p>Comprehensive leave management solution for textile companies of all sizes.</p>
+            </div>
+            <div class="col-md-4">
+                <h4 class="mb-4">Quick Links</h4>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{{ url_for('login') }}" class="text-white-50 text-decoration-none">Login</a></li>
+                    <li class="mb-2"><a href="{{ url_for('register') }}" class="text-white-50 text-decoration-none">Register</a></li>
+                    <li class="mb-2"><a href="#features" class="text-white-50 text-decoration-none">Features</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h4 class="mb-4">Contact</h4>
+                <p><i class="fas fa-envelope me-2"></i> vigneshmba22@gmail.com</p>
+                <p><i class="fas fa-phone me-2"></i> +91 8220092569</p>
+            </div>
+        </div>
+        <hr class="my-4">
+        <div class="text-center">
+            <p>&copy; 2025 Super Sales India LTD Jay Textiles Unit II Otthakkalmandapam,Coimbatore-641032. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block title %}Register - Textile Leave Management{% endblock %}
+
+{% block body %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Create Account</h2>
+            <p class="text-muted">Join TextileLeave Pro today</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="employee_id" class="form-label">Employee ID *</label>
+                    <input type="text" class="form-control" id="employee_id" name="employee_id" required
+                           placeholder="EMP001">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="first_name" class="form-label">First Name *</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" required
+                           placeholder="John">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="last_name" class="form-label">Last Name *</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" required
+                           placeholder="Doe">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email *</label>
+                    <input type="email" class="form-control" id="email" name="email" required
+                           placeholder="john@example.com">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">Phone</label>
+                    <input type="tel" class="form-control" id="phone" name="phone"
+                           placeholder="+1 (555) 123-4567">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="department" class="form-label">Department</label>
+                    <select class="form-select" id="department" name="department">
+                        <option value="">Select Department</option>
+                        <option value="Weaving">Weaving</option>
+                        <option value="Spinning">Spinning</option>
+                        <option value="Dyeing">Dyeing</option>
+                        <option value="Finishing">Finishing</option>
+                        <option value="Quality Control">Quality Control</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Administration">Administration</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="designation" class="form-label">Designation</label>
+                    <input type="text" class="form-control" id="designation" name="designation"
+                           placeholder="Weaver Operator">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="date_of_joining" class="form-label">Date of Joining *</label>
+                    <input type="date" class="form-control" id="date_of_joining" name="date_of_joining" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="password" class="form-label">Password *</label>
+                    <input type="password" class="form-control" id="password" name="password" required
+                           placeholder="Create password">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="confirm_password" class="form-label">Confirm Password *</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                           placeholder="Confirm password">
+                </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="terms" required>
+                <label class="form-check-label" for="terms">
+                    I agree to the <a href="#" class="text-decoration-none">Terms & Conditions</a>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+                <i class="fas fa-user-plus me-2"></i>Register
+            </button>
+            
+            <div class="text-center">
+                <p class="mb-0">Already have an account? 
+                    <a href="{{ url_for('login') }}" class="text-decoration-none">Login here</a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,345 @@
+{% extends "layout.html" %}
+
+{% block title %}My Profile - Textile Leave Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-industry me-2"></i>TextileLeave Pro</h3>
+                <small>Employee Portal</small>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h5 class="mt-2 mb-0">{{ current_user.get_full_name() }}</h5>
+                <small class="text-muted">{{ current_user.designation }}</small>
+                <p class="small mt-2 mb-0">{{ current_user.employee_id }}</p>
+            </div>
+            
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('apply_leave') }}">
+                        <i class="fas fa-calendar-plus me-2"></i>Apply Leave
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('leave_status') }}">
+                        <i class="fas fa-history me-2"></i>Leave Status
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_attendance') }}">
+                        <i class="fas fa-clock me-2"></i>My Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('user_profile') }}">
+                        <i class="fas fa-user-cog me-2"></i>Profile
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="welcome-message">
+                            <h1>My Profile</h1>
+                            <p class="text-muted mb-0">Manage your personal information</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fas fa-edit me-1"></i>Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Information -->
+            <div class="row">
+                <div class="col-lg-4">
+                    <!-- Profile Card -->
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <div class="user-avatar mx-auto mb-3" style="width: 120px; height: 120px; font-size: 48px;">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h4>{{ current_user.get_full_name() }}</h4>
+                            <p class="text-muted">{{ current_user.designation }}</p>
+                            <div class="d-flex justify-content-center gap-2 mb-3">
+                                <span class="badge bg-primary">{{ current_user.department }}</span>
+                                <span class="badge bg-success">{{ current_user.employee_id }}</span>
+                            </div>
+                            <div class="mt-4">
+                                <p class="mb-1">
+                                    <i class="fas fa-envelope me-2 text-muted"></i>
+                                    {{ current_user.email }}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="fas fa-phone me-2 text-muted"></i>
+                                    {{ current_user.phone or 'Not provided' }}
+                                </p>
+                                <p class="mb-0">
+                                    <i class="fas fa-calendar-alt me-2 text-muted"></i>
+                                    Joined {{ current_user.date_of_joining.strftime('%d %b %Y') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-bar me-2"></i>Quick Stats
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6 mb-3">
+                                    <h4 class="text-primary">{{ total_leaves }}</h4>
+                                    <small>Total Leaves</small>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <h4 class="text-success">{{ approved_leaves }}</h4>
+                                    <small>Approved</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-warning">{{ pending_leaves }}</h4>
+                                    <small>Pending</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-danger">{{ rejected_leaves }}</h4>
+                                    <small>Rejected</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-8">
+                    <!-- Personal Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-user me-2"></i>Personal Information
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Employee ID</label>
+                                    <p class="fw-bold">{{ current_user.employee_id }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Full Name</label>
+                                    <p class="fw-bold">{{ current_user.get_full_name() }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Email Address</label>
+                                    <p class="fw-bold">{{ current_user.email }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Phone Number</label>
+                                    <p class="fw-bold">{{ current_user.phone or 'Not provided' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Department</label>
+                                    <p class="fw-bold">{{ current_user.department or 'Not assigned' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Designation</label>
+                                    <p class="fw-bold">{{ current_user.designation or 'Not assigned' }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Date of Joining</label>
+                                    <p class="fw-bold">{{ current_user.date_of_joining.strftime('%d %b %Y') }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Shift</label>
+                                    <p class="fw-bold">{{ current_user.shift or 'Not assigned' }}</p>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label text-muted">Account Status</label>
+                                    <p>
+                                        {% if current_user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Change Password -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-lock me-2"></i>Change Password
+                        </div>
+                        <div class="card-body">
+                            <form id="changePasswordForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="currentPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="newPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Password must be at least 8 characters long and contain letters and numbers.
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Change Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editProfileForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="editPhone" value="{{ current_user.phone }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <select class="form-select" id="editDepartment">
+                            <option value="">Select Department</option>
+                            <option value="Weaving" {% if current_user.department == 'Weaving' %}selected{% endif %}>Weaving</option>
+                            <option value="Spinning" {% if current_user.department == 'Spinning' %}selected{% endif %}>Spinning</option>
+                            <option value="Dyeing" {% if current_user.department == 'Dyeing' %}selected{% endif %}>Dyeing</option>
+                            <option value="Finishing" {% if current_user.department == 'Finishing' %}selected{% endif %}>Finishing</option>
+                            <option value="Quality Control" {% if current_user.department == 'Quality Control' %}selected{% endif %}>Quality Control</option>
+                            <option value="Maintenance" {% if current_user.department == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                            <option value="Administration" {% if current_user.department == 'Administration' %}selected{% endif %}>Administration</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Designation</label>
+                        <input type="text" class="form-control" id="editDesignation" value="{{ current_user.designation }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Shift</label>
+                        <select class="form-select" id="editShift">
+                            <option value="">Select Shift</option>
+                            <option value="Morning" {% if current_user.shift == 'Morning' %}selected{% endif %}>Morning (6AM - 2PM)</option>
+                            <option value="Evening" {% if current_user.shift == 'Evening' %}selected{% endif %}>Evening (2PM - 10PM)</option>
+                            <option value="Night" {% if current_user.shift == 'Night' %}selected{% endif %}>Night (10PM - 6AM)</option>
+                            <option value="General" {% if current_user.shift == 'General' %}selected{% endif %}>General Shift</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Change password form
+$('#changePasswordForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const currentPassword = $('#currentPassword').val();
+    const newPassword = $('#newPassword').val();
+    const confirmPassword = $('#confirmPassword').val();
+    
+    if (newPassword !== confirmPassword) {
+        toastr.error('New passwords do not match');
+        return;
+    }
+    
+    if (newPassword.length < 8) {
+        toastr.error('Password must be at least 8 characters long');
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/change_password',
+        method: 'POST',
+        data: {
+            current_password: currentPassword,
+            new_password: newPassword
+        },
+        success: function(response) {
+            toastr.success('Password changed successfully');
+            $('#changePasswordForm')[0].reset();
+        },
+        error: function(xhr) {
+            toastr.error(xhr.responseJSON?.error || 'Failed to change password');
+        }
+    });
+});
+
+// Edit profile form
+$('#editProfileForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        phone: $('#editPhone').val(),
+        department: $('#editDepartment').val(),
+        designation: $('#editDesignation').val(),
+        shift: $('#editShift').val()
+    };
+    
+    $.ajax({
+        url: '/api/update_profile',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            toastr.success('Profile updated successfully');
+            $('#editProfileModal').modal('hide');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function(xhr) {
+            toastr.error(xhr.responseJSON?.error || 'Failed to update profile');
+        }
+    });
+});
+</script>
+{% endblock %}

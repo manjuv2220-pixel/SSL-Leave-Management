@@ -1,0 +1,525 @@
+{% extends "layout.html" %}
+
+{% block title %}Leave Status - Textile Leave Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+    .badge-pending { background-color: #ffc107; color: #000; }
+    .badge-approved { background-color: #198754; color: #fff; }
+    .badge-rejected { background-color: #dc3545; color: #fff; }
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        color: white;
+    }
+    .detail-row {
+        margin-bottom: 10px;
+    }
+    .detail-label {
+        font-weight: bold;
+        color: #666;
+    }
+    .detail-value {
+        color: #333;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-industry me-2"></i>TextileLeave Pro</h3>
+                <small>Employee Portal</small>
+            </div>
+
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h5 class="mt-2 mb-0">{{ current_user.get_full_name() }}</h5>
+                <small class="text-muted">{{ current_user.designation }}</small>
+                <p class="small mt-2 mb-0">{{ current_user.employee_id }}</p>
+            </div>
+
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('apply_leave') }}">
+                        <i class="fas fa-calendar-plus me-2"></i>Apply Leave
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('leave_status') }}">
+                        <i class="fas fa-history me-2"></i>Leave Status
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_attendance') }}">
+                        <i class="fas fa-clock me-2"></i>My Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_profile') }}">
+                        <i class="fas fa-user-cog me-2"></i>Profile
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="welcome-message">
+                            <h1>Leave Status & History</h1>
+                            <p class="text-muted mb-0">Track your leave applications</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{{ url_for('apply_leave') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus me-1"></i>Apply New Leave
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="row">
+                    <div class="col-md-3">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="Annual">Annual</option>
+                            <option value="Sick">Sick</option>
+                            <option value="Casual">Casual</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control" id="dateFromFilter" placeholder="From Date">
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="searchInput">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ total_leaves }}</h3>
+                            <p>Total Applications</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ pending_leaves }}</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ approved_leaves }}</h3>
+                            <p>Approved</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>{{ rejected_leaves }}</h3>
+                            <p>Rejected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leave Applications Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-history me-2"></i>Leave Applications</span>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV('leaves_export.csv')">
+                            <i class="fas fa-file-csv me-1"></i>Export CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if leaves %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="leavesTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Leave Type</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Days</th>
+                                    <th>Applied On</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leaves %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ leave.leave_type }}</td>
+                                    <td>{{ leave.start_date.strftime('%d %b %Y') }}</td>
+                                    <td>{{ leave.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>{{ leave.total_days }}</td>
+                                    <td>{{ leave.applied_date.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        {% if leave.status == 'Pending' %}
+                                        <span class="badge badge-pending">Pending</span>
+                                        {% elif leave.status == 'Approved' %}
+                                        <span class="badge badge-approved">Approved</span>
+                                        {% else %}
+                                        <span class="badge badge-rejected">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-outline-info btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#viewLeaveModal{{ leave.id }}"
+                                                title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if leave.status == 'Pending' %}
+                                        <button class="btn btn-outline-warning btn-sm"
+                                                onclick="cancelLeave({{ leave.id }})"
+                                                title="Cancel Leave">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                                <!-- View Leave Modal -->
+                                <div class="modal fade" id="viewLeaveModal{{ leave.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Leave Application Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6>Application Information</h6>
+                                                        <div class="detail-row mb-2">
+                                                            <span class="detail-label">Application ID:</span>
+                                                            <span class="detail-value">L{{ "%06d" % leave.id }}</span>
+                                                        </div>
+                                                        <div class="detail-row mb-2">
+                                                            <span class="detail-label">Status:</span>
+                                                            <span class="detail-value">
+                                                                {% if leave.status == 'Pending' %}
+                                                                <span class="badge badge-pending">Pending</span>
+                                                                {% elif leave.status == 'Approved' %}
+                                                                <span class="badge badge-approved">Approved</span>
+                                                                {% else %}
+                                                                <span class="badge badge-rejected">Rejected</span>
+                                                                {% endif %}
+                                                            </span>
+                                                        </div>
+                                                        <div class="detail-row mb-2">
+                                                            <span class="detail-label">Applied On:</span>
+                                                            <span class="detail-value">{{ leave.applied_date.strftime('%d %b %Y %H:%M') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6>Leave Details</h6>
+                                                        <div class="detail-row mb-2">
+                                                            <span class="detail-label">Leave Type:</span>
+                                                            <span class="detail-value">{{ leave.leave_type }}</span>
+                                                        </div>
+                                                        <div class="detail-row mb-2">
+                                                            <span class="detail-label">From:</span>
+                                                            <span class="detail-value">{{ leave.start_date.strftime('%d %b %Y') }}</span>
+                                                        </div>
+                                                        <div class="detail-row mb-2">
+                                                            <span class="detail-label">To:</span>
+                                                            <span class="detail-value">{{ leave.end_date.strftime('%d %b %Y') }}</span>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <span class="detail-label">Total Days:</span>
+                                                            <span class="detail-value">{{ leave.total_days }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <hr>
+
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <h6>Reason for Leave</h6>
+                                                        <div class="border rounded p-3 mt-2">
+                                                            {{ leave.reason }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {% if leave.admin_comment %}
+                                                <div class="row mt-3">
+                                                    <div class="col-md-12">
+                                                        <h6>Admin Comment</h6>
+                                                        <div class="border rounded p-3 mt-2">
+                                                            {{ leave.admin_comment }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+
+                                                {% if leave.status == 'Pending' %}
+                                                <div class="row mt-3">
+                                                    <div class="col-md-12">
+                                                        <div class="alert alert-warning">
+                                                            <i class="fas fa-info-circle me-1"></i>
+                                                            This application is pending approval. You can cancel it if needed.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                {% if leave.status == 'Pending' %}
+                                                <button type="button" class="btn btn-danger" onclick="cancelLeave({{ leave.id }})">
+                                                    <i class="fas fa-times me-1"></i>Cancel Leave
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5>No Leave Applications</h5>
+                        <p class="text-muted">You haven't applied for any leaves yet</p>
+                        <a href="{{ url_for('apply_leave') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus me-1"></i>Apply for Leave
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Leave Calendar Preview -->
+            <!-- Leave Calendar Preview -->
+<div class="card mt-4">
+    <div class="card-header">
+        <i class="fas fa-calendar me-2"></i>Upcoming Approved Leaves
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% set upcoming_leaves = [] %}
+            {% for leave in leaves if leave.status == 'Approved' %}
+                {% if upcoming_leaves.append(leave) %}{% endif %}
+            {% endfor %}
+
+            {% for leave in upcoming_leaves[:3] %}
+            <div class="col-md-4">
+                <div class="card border-success mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ leave.leave_type }} Leave</h5>
+                        <p class="card-text">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            {{ leave.start_date.strftime('%d %b') }} - {{ leave.end_date.strftime('%d %b') }}
+                        </p>
+                        <p class="card-text">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ leave.total_days }} day(s)
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if upcoming_leaves|length == 0 %}
+            <div class="col-md-12 text-center text-muted py-3">
+                <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                <p>No upcoming approved leaves</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script>
+// Filter leaves
+$('#statusFilter, #typeFilter, #dateFromFilter, #searchInput').on('change keyup', function() {
+    const status = $('#statusFilter').val();
+    const type = $('#typeFilter').val();
+    const dateFrom = $('#dateFromFilter').val();
+    const search = $('#searchInput').val().toLowerCase();
+
+    $('#leavesTable tbody tr').each(function() {
+        const row = $(this);
+        const rowStatus = row.find('td:eq(6) .badge').text();
+        const rowType = row.find('td:eq(1)').text();
+        const rowDate = row.find('td:eq(2)').text();
+        const rowText = row.text().toLowerCase();
+
+        let show = true;
+
+        if (status && rowStatus !== status) {
+            show = false;
+        }
+
+        if (type && rowType !== type) {
+            show = false;
+        }
+
+        if (dateFrom) {
+            const filterDate = new Date(dateFrom);
+            const rowDateObj = new Date(rowDate);
+            if (rowDateObj < filterDate) {
+                show = false;
+            }
+        }
+
+        if (search && !rowText.includes(search)) {
+            show = false;
+        }
+
+        if (show) {
+            row.show();
+        } else {
+            row.hide();
+        }
+    });
+});
+
+// Cancel leave application
+function cancelLeave(leaveId) {
+    if (confirm('Are you sure you want to cancel this leave application?')) {
+        $.ajax({
+            url: '/api/leave/' + leaveId + '/cancel',
+            method: 'POST',
+            success: function(response) {
+                alert('Leave application cancelled successfully');
+                location.reload();
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON?.error || 'Failed to cancel leave application');
+            }
+        });
+    }
+}
+
+// Export table to CSV
+function exportTableToCSV(filename) {
+    var csv = [];
+    var rows = document.querySelectorAll("#leavesTable tr");
+
+    for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll("td, th");
+
+        for (var j = 0; j < cols.length - 1; j++) { // Exclude actions column
+            row.push(cols[j].innerText);
+        }
+
+        csv.push(row.join(","));
+    }
+
+    // Download CSV file
+    var csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
+    var downloadLink = document.createElement("a");
+
+    downloadLink.download = filename;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+}
+
+// Initialize date formatting
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+$('.date-cell').each(function() {
+    const dateString = $(this).text();
+    if (dateString) {
+        $(this).text(formatDate(dateString));
+    }
+});
+</script>
+{% endblock %}

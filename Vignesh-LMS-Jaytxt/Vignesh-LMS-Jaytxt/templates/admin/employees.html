@@ -1,0 +1,504 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Employees - Textile Leave Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar d-md-block">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-industry me-2"></i>TextileLeave Pro</h3>
+                <small>Admin Panel</small>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h5 class="mt-2 mb-0">{{ current_user.get_full_name() }}</h5>
+                <small class="text-muted">Administrator</small>
+            </div>
+            
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('admin_employees') }}">
+                        <i class="fas fa-users me-2"></i>Employees
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_leaves') }}">
+                        <i class="fas fa-calendar-check me-2"></i>Leave Requests
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_attendance') }}">
+                        <i class="fas fa-clock me-2"></i>Attendance
+                    </a>
+                </li>
+                               <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="welcome-message">
+                            <h1>Employee Management</h1>
+                            <p class="text-muted mb-0">Manage all employees in the system</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                            <i class="fas fa-user-plus me-1"></i>Add Employee
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="row">
+                    <div class="col-md-3">
+                        <select class="form-select" id="departmentFilter">
+                            <option value="">All Departments</option>
+                            <option value="Weaving">Weaving</option>
+                            <option value="Spinning">Spinning</option>
+                            <option value="Dyeing">Dyeing</option>
+                            <option value="Finishing">Finishing</option>
+                            <option value="Quality Control">Quality Control</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Administration">Administration</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search employees..." id="searchInput">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Employees Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-users me-2"></i>Employee List</span>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2 export-btn" data-type="employees" data-format="csv">
+                            <i class="fas fa-file-csv me-1"></i>Export CSV
+                        </button>
+                        <button class="btn btn-sm btn-outline-success export-btn" data-type="employees" data-format="pdf">
+                            <i class="fas fa-file-pdf me-1"></i>Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="employeesTable">
+                            <thead>
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Designation</th>
+                                    <th>Date of Joining</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employees %}
+                                <tr>
+                                    <td>{{ employee.employee_id }}</td>
+                                    <td>{{ employee.get_full_name() }}</td>
+                                    <td>{{ employee.email }}</td>
+                                    <td>{{ employee.department or 'Not Set' }}</td>
+                                    <td>{{ employee.designation or 'Not Set' }}</td>
+                                    <td>{{ employee.date_of_joining.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        {% if employee.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-info" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#viewEmployeeModal{{ employee.id }}"
+                                                    title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editEmployeeModal{{ employee.id }}"
+                                                    title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {% if employee.is_active %}
+                                            <button class="btn btn-outline-danger"
+                                                    onclick="deactivateEmployee({{ employee.id }})"
+                                                    title="Deactivate">
+                                                <i class="fas fa-user-slash"></i>
+                                            </button>
+                                            {% else %}
+                                            <button class="btn btn-outline-success"
+                                                    onclick="activateEmployee({{ employee.id }})"
+                                                    title="Activate">
+                                                <i class="fas fa-user-check"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- View Employee Modal -->
+                                <div class="modal fade" id="viewEmployeeModal{{ employee.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Employee Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-4 text-center">
+                                                        <div class="user-avatar mb-3" style="width: 100px; height: 100px;">
+                                                            <i class="fas fa-user-tie fa-3x"></i>
+                                                        </div>
+                                                        <h5>{{ employee.get_full_name() }}</h5>
+                                                        <p class="text-muted">{{ employee.designation }}</p>
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <strong>Employee ID:</strong>
+                                                                <p>{{ employee.employee_id }}</p>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Email:</strong>
+                                                                <p>{{ employee.email }}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <strong>Phone:</strong>
+                                                                <p>{{ employee.phone or 'Not Set' }}</p>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Department:</strong>
+                                                                <p>{{ employee.department or 'Not Set' }}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <strong>Date of Joining:</strong>
+                                                                <p>{{ employee.date_of_joining.strftime('%d %b %Y') }}</p>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Status:</strong>
+                                                                <p>
+                                                                    {% if employee.is_active %}
+                                                                    <span class="badge bg-success">Active</span>
+                                                                    {% else %}
+                                                                    <span class="badge bg-danger">Inactive</span>
+                                                                    {% endif %}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                <strong>Total Leaves Taken:</strong>
+                                                                <p>{{ employee.leaves|length }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Edit Employee Modal -->
+                                <div class="modal fade" id="editEmployeeModal{{ employee.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Edit Employee</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form id="editForm{{ employee.id }}" onsubmit="updateEmployee(event, {{ employee.id }})">
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">First Name</label>
+                                                        <input type="text" class="form-control" name="first_name" value="{{ employee.first_name }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Last Name</label>
+                                                        <input type="text" class="form-control" name="last_name" value="{{ employee.last_name }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Email</label>
+                                                        <input type="email" class="form-control" name="email" value="{{ employee.email }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Phone</label>
+                                                        <input type="tel" class="form-control" name="phone" value="{{ employee.phone }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Department</label>
+                                                        <select class="form-select" name="department">
+                                                            <option value="">Select Department</option>
+                                                            <option value="Weaving" {% if employee.department == 'Weaving' %}selected{% endif %}>Weaving</option>
+                                                            <option value="Spinning" {% if employee.department == 'Spinning' %}selected{% endif %}>Spinning</option>
+                                                            <option value="Dyeing" {% if employee.department == 'Dyeing' %}selected{% endif %}>Dyeing</option>
+                                                            <option value="Finishing" {% if employee.department == 'Finishing' %}selected{% endif %}>Finishing</option>
+                                                            <option value="Quality Control" {% if employee.department == 'Quality Control' %}selected{% endif %}>Quality Control</option>
+                                                            <option value="Maintenance" {% if employee.department == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                                                            <option value="Administration" {% if employee.department == 'Administration' %}selected{% endif %}>Administration</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Designation</label>
+                                                        <input type="text" class="form-control" name="designation" value="{{ employee.designation }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="is_active" id="isActive{{ employee.id }}" {% if employee.is_active %}checked{% endif %}>
+                                                            <label class="form-check-label" for="isActive{{ employee.id }}">
+                                                                Active Account
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Update Employee</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not employees %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No Employees Found</h5>
+                        <p class="text-muted">Add employees to get started</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                            <i class="fas fa-user-plus me-1"></i>Add Employee
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Employee ID *</label>
+                        <input type="text" class="form-control" name="employee_id" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <select class="form-select" name="department">
+                            <option value="">Select Department</option>
+                            <option value="Weaving">Weaving</option>
+                            <option value="Spinning">Spinning</option>
+                            <option value="Dyeing">Dyeing</option>
+                            <option value="Finishing">Finishing</option>
+                            <option value="Quality Control">Quality Control</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Administration">Administration</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Designation</label>
+                        <input type="text" class="form-control" name="designation">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date of Joining *</label>
+                        <input type="date" class="form-control" name="date_of_joining" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password *</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password *</label>
+                        <input type="password" class="form-control" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter employees
+$('#departmentFilter, #statusFilter, #searchInput').on('change keyup', function() {
+    const department = $('#departmentFilter').val();
+    const status = $('#statusFilter').val();
+    const search = $('#searchInput').val().toLowerCase();
+    
+    $('#employeesTable tbody tr').each(function() {
+        const row = $(this);
+        const rowDepartment = row.find('td:eq(3)').text();
+        const rowStatus = row.find('td:eq(6) .badge').text().toLowerCase();
+        const rowText = row.text().toLowerCase();
+        
+        let show = true;
+        
+        if (department && rowDepartment !== department) {
+            show = false;
+        }
+        
+        if (status) {
+            if (status === 'active' && rowStatus !== 'active') {
+                show = false;
+            }
+            if (status === 'inactive' && rowStatus !== 'inactive') {
+                show = false;
+            }
+        }
+        
+        if (search && !rowText.includes(search)) {
+            show = false;
+        }
+        
+        if (show) {
+            row.show();
+        } else {
+            row.hide();
+        }
+    });
+});
+
+// Employee status management
+function deactivateEmployee(id) {
+    if (confirm('Are you sure you want to deactivate this employee?')) {
+        $.ajax({
+            url: '/api/employee/' + id + '/deactivate',
+            method: 'POST',
+            success: function(response) {
+                toastr.success('Employee deactivated successfully');
+                setTimeout(() => location.reload(), 1000);
+            },
+            error: function() {
+                toastr.error('Failed to deactivate employee');
+            }
+        });
+    }
+}
+
+function activateEmployee(id) {
+    if (confirm('Are you sure you want to activate this employee?')) {
+        $.ajax({
+            url: '/api/employee/' + id + '/activate',
+            method: 'POST',
+            success: function(response) {
+                toastr.success('Employee activated successfully');
+                setTimeout(() => location.reload(), 1000);
+            },
+            error: function() {
+                toastr.error('Failed to activate employee');
+            }
+        });
+    }
+}
+
+function updateEmployee(event, id) {
+    event.preventDefault();
+    
+    const form = $('#editForm' + id);
+    const formData = new FormData(form[0]);
+    
+    $.ajax({
+        url: '/api/employee/' + id + '/update',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            toastr.success('Employee updated successfully');
+            $('#editEmployeeModal' + id).modal('hide');
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function() {
+            toastr.error('Failed to update employee');
+        }
+    });
+}
+</script>
+{% endblock %}
